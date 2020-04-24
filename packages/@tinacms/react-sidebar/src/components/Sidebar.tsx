@@ -80,6 +80,7 @@ const Sidebar = ({ sidebar }: SidebarProps) => {
   const [activeScreen, setActiveView] = useState<ScreenPlugin | null>(null)
   const allScreens = screens.all()
   const showMenu = allScreens.length > 0
+  const noFormsPlaceholder = null // If you set this to a component it will replace the empty state
 
   return (
     <>
@@ -97,7 +98,7 @@ const Sidebar = ({ sidebar }: SidebarProps) => {
             )}
             <CreateContentMenu />
           </SidebarHeader>
-          <FormsView />
+          <FormsView noFormsPlaceholder={noFormsPlaceholder} />
           {showMenu && (
             <MenuPanel visible={menuIsOpen}>
               <MenuWrapper>

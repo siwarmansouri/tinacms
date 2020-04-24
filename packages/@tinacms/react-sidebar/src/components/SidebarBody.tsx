@@ -27,10 +27,17 @@ import { useCMS, useSubscribable } from '@tinacms/react-core'
 import { FormView } from '@tinacms/react-forms'
 import { LeftArrowIcon } from '@tinacms/icons'
 
-export const FormsView = () => {
+interface FormsViewProps {
+  noFormsPlaceholder?: any
+}
+
+export const FormsView = ({ noFormsPlaceholder }: FormsViewProps) => {
   const [activeFormId, setActiveFormId] = useState<string>('')
   const cms = useCMS()
   const formPlugins = cms.plugins.getType<Form>('form')
+  const NoFormsPlaceholder = noFormsPlaceholder
+    ? noFormsPlaceholder
+    : DefaultNoFormsPlaceholder
 
   /**
    * If there's only one form, make it the active form.
@@ -192,7 +199,7 @@ const LinkButton = styled.a`
   }
 `
 
-const NoFormsPlaceholder = () => (
+const DefaultNoFormsPlaceholder = () => (
   <EmptyState>
     <Emoji>👋</Emoji>
     <h3>
