@@ -171,4 +171,8 @@ export function useInlineBlock() {
 const BlocksEmptyState = styled.div`
   margin: var(--tina-padding-big) 0;
   position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `

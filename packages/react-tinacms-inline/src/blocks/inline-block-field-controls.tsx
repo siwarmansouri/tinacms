@@ -136,9 +136,152 @@ export function BlocksControls({ children, index }: BlocksControlsProps) {
   )
 }
 
+export function PageBlocksControls({ children, index }: BlocksControlsProps) {
+  const { status } = useInlineForm()
+  const {
+    insert,
+    move,
+    remove,
+    blocks,
+    count,
+    activeBlock,
+    setActiveBlock,
+  } = useInlineBlocks()
+  const { template } = useInlineBlock()
+  const isFirst = index === 0
+  const isLast = index === count - 1
+  const blockRef = React.useRef<HTMLDivElement>(null)
+  const blockMenuRef = React.useRef<HTMLDivElement>(null)
+  const blockMoveUpRef = React.useRef<HTMLButtonElement>(null)
+  const blockMoveDownRef = React.useRef<HTMLButtonElement>(null)
+
+  React.useEffect(() => {
+    document.addEventListener('click', handleClickOutside, true)
+    return () => {
+      document.removeEventListener('click', handleClickOutside, true)
+    }
+  }, [blockRef.current, blockMenuRef.current])
+
+  if (status === 'inactive') {
+    return children
+  }
+
+  const removeBlock = () => remove(index)
+
+  const handleClickOutside = (event: any) => {
+    if (
+      blockRef.current?.contains(event.target) ||
+      blockMenuRef.current?.contains(event.target)
+    ) {
+      return
+    }
+    setActiveBlock(-1)
+  }
+
+  const moveBlockUp = () => {
+    move(index, index - 1)
+    setActiveBlock(index - 1)
+  }
+
+  const moveBlockDown = () => {
+    move(index, index + 1)
+    setActiveBlock(index + 1)
+  }
+
+  const handleSetActiveBlock = (event: any) => {
+    if (
+      blockMoveUpRef.current?.contains(event.target) ||
+      blockMoveDownRef.current?.contains(event.target) ||
+      activeBlock === index
+    ) {
+      return
+    }
+    setActiveBlock(index)
+  }
+
+  return (
+    <PageBlockWrapper
+      ref={blockRef}
+      active={activeBlock === index}
+      onClick={handleSetActiveBlock}
+    >
+      <AddBlockMenuWrapper index={index}>
+        <AddBlockMenu
+          addBlock={block => insert(index + 1, block)}
+          templates={Object.entries(blocks).map(([, block]) => block.template)}
+        />
+      </AddBlockMenuWrapper>
+      <PageBlockMenu ref={blockMenuRef} index={index}>
+        <BlockMenuLeft>&nbsp;</BlockMenuLeft>
+        <BlockMenuRight>
+          <IconButton
+            ref={blockMoveUpRef}
+            primary
+            onClick={moveBlockUp}
+            disabled={isFirst}
+          >
+            <ChevronUpIcon />
+          </IconButton>
+          <IconButton
+            ref={blockMoveDownRef}
+            primary
+            onClick={moveBlockDown}
+            disabled={isLast}
+          >
+            <ChevronDownIcon />
+          </IconButton>
+          <BlockSettings template={template} />
+          <IconButton primary onClick={removeBlock}>
+            <TrashIcon />
+          </IconButton>
+        </BlockMenuRight>
+      </PageBlockMenu>
+      {children}
+    </PageBlockWrapper>
+  )
+}
+
 interface BlockMenuProps {
   index: number
 }
+
+const PageBlockMenu = styled.div<BlockMenuProps>`
+  position: absolute;
+  top: 0;
+  right: 16px;
+  left: 16px;
+  display: grid;
+  align-items: center;
+  grid-template-areas: 'left right';
+  grid-template-columns: auto auto;
+  opacity: 0;
+  transform: translate3d(0, 0, 0);
+  transition: all 120ms ease-out;
+  z-index: calc(1000 - ${props => props.index});
+  pointer-events: none;
+
+  ${Button} {
+    height: 34px;
+    margin: 0 4px;
+  }
+
+  ${IconButton} {
+    width: 34px;
+    height: 34px;
+    margin: 0 4px;
+  }
+`
+
+const AddBlockMenuWrapper = styled.div<BlockMenuProps>`
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate3d(-50%, 0, 0);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 120ms ease-out;
+  z-index: calc(1000 - ${props => props.index});
+`
 
 const BlockMenu = styled.div<BlockMenuProps>`
   position: absolute;
@@ -214,6 +357,51 @@ const BlockWrapper = styled.div<BlockWrapperProps>`
     css`
       ${BlockMenu} {
         transform: translate3d(0, -100%, 0);
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      &:after {
+        opacity: 1 !important;
+      }
+    `};
+`
+
+const PageBlockWrapper = styled.div<BlockWrapperProps>`
+  position: relative;
+
+  &:hover {
+    &:after {
+      opacity: 0.3;
+    }
+  }
+
+  &:after {
+    content: '';
+    display: block;
+    position: absolute;
+    left: 16px;
+    top: 16px;
+    width: calc(100% - 32px);
+    height: calc(100% - 32px);
+    border: 3px solid var(--tina-color-primary);
+    border-radius: var(--tina-radius-big);
+    opacity: 0;
+    pointer-events: none;
+    transition: all var(--tina-timing-medium) ease-out;
+  }
+
+  ${p =>
+    p.active &&
+    css`
+      ${PageBlockMenu} {
+        transform: translate3d(0, -100%, 0);
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      ${AddBlockMenuWrapper} {
+        transform: translate3d(-50%, 100%, 0);
         opacity: 1;
         pointer-events: all;
       }
