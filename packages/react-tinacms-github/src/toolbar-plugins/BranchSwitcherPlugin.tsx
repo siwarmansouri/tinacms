@@ -508,6 +508,7 @@ const SelectLabel = styled.span`
 
 const SelectCurrent = styled.span`
   color: var(--tina-color-grey-6);
+  font-size: var(--tina-font-size-3);
   display: block;
   text-align: left;
   line-height: 20px;
