@@ -16,9 +16,9 @@
 
  */
 
-import React from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import styled, { css, keyframes } from 'styled-components'
-import { Alerts as AlertsCollection, AlertLevel } from '@tinacms/alerts'
+import { AlertLevel, Alert } from '@tinacms/alerts'
 import {
   AlertIcon,
   InfoIcon,
@@ -26,14 +26,57 @@ import {
   ErrorIcon,
   CloseIcon,
 } from '@tinacms/icons'
-import { useSubscribable } from '@tinacms/react-core'
+import { useCMS } from '@tinacms/react-core'
 
 export interface AlertsProps {
   alerts: AlertsCollection
 }
 
-export function Alerts({ alerts }: AlertsProps) {
-  useSubscribable(alerts)
+interface AlertsCollection {
+  all: Alert[]
+  dismiss(alert: Alert): void
+}
+
+function useAlerts(): AlertsCollection {
+  const cms = useCMS()
+  const [alerts, setAlerts] = useState<{ [key: string]: Alert }>({})
+
+  const dismiss = useCallback((alert: Alert) => {
+    setAlerts(alerts => {
+      const newAlerts = { ...alerts }
+      delete newAlerts[alert.id]
+      return newAlerts
+    })
+  }, [])
+
+  useEffect(() => {
+    return cms.events.subscribe('alert', event => {
+      setAlerts(alerts => ({
+        ...alerts,
+        [event.alert.id]: event.alert,
+      }))
+
+      let timeoutId: any = null
+
+      const dismissTimeout = () => {
+        clearTimeout(timeoutId)
+        dismiss(event.alert)
+      }
+
+      timeoutId = setTimeout(dismissTimeout, event.alert.timeout)
+    })
+  }, [])
+
+  return {
+    dismiss,
+    get all(): Alert[] {
+      return Object.keys(alerts).map(id => alerts[id])
+    },
+  }
+}
+
+export function Alerts() {
+  const alerts = useAlerts()
 
   if (!alerts.all.length) {
     return null

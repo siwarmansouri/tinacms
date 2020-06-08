@@ -18,12 +18,13 @@
 
 import { EventBus, Callback } from '@tinacms/core'
 
+/**
+ * This class provides a helper API for creating Alert Events.
+ */
 export class Alerts {
-  private alerts: Map<string, Alert> = new Map()
-
   constructor(private events: EventBus) {}
 
-  add(level: AlertLevel, message: string, timeout: number = 3000): () => void {
+  add(level: AlertLevel, message: string, timeout: number = 3000) {
     const alert = {
       level,
       message,
@@ -31,35 +32,13 @@ export class Alerts {
       id: `${message}|${Date.now()}`,
     }
 
-    this.alerts.set(alert.id, alert)
-
-    this.events.dispatch({ type: 'alerts:add', alert })
-
-    let timeoutId: any = null
-
-    const dismiss = () => {
-      clearTimeout(timeoutId)
-      this.dismiss(alert)
-    }
-
-    timeoutId = setTimeout(dismiss, alert.timeout)
-
-    return dismiss
-  }
-
-  dismiss(alert: Alert) {
-    this.alerts.delete(alert.id)
-    this.events.dispatch({ type: 'alerts:remove', alert })
+    this.events.dispatch({ type: 'alert', alert })
   }
 
   subscribe(cb: Callback) {
-    const unsub = this.events.subscribe('alerts', cb)
+    const unsub = this.events.subscribe('alert', cb)
 
     return () => unsub()
-  }
-
-  get all() {
-    return Array.from(this.alerts.values())
   }
 
   info(message: string, timeout?: number) {
